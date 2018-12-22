@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.annimon.stream.IntPair;
 import com.mxt.anitrend.R;
 import com.mxt.anitrend.base.custom.consumer.BaseConsumer;
 import com.mxt.anitrend.base.interfaces.event.ItemClickListener;
@@ -32,7 +33,7 @@ import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.ErrorUtil;
 import com.mxt.anitrend.util.GraphUtil;
 import com.mxt.anitrend.util.KeyUtil;
-import com.mxt.anitrend.util.MarkDown;
+import com.mxt.anitrend.util.MarkDownUtil;
 import com.mxt.anitrend.util.NotifyUtil;
 
 import org.greenrobot.eventbus.EventBus;
@@ -166,7 +167,6 @@ public class ComposerWidget extends FrameLayout implements CustomView, View.OnCl
         itemClickListener = null;
     }
 
-    // TODO: 2018/03/25 Check how parameters are being passed
     @SuppressLint("SwitchIntDef")
     public void startRequestData() {
         if (binding.widgetFlipper.getDisplayedChild() == WidgetPresenter.CONTENT_STATE) {
@@ -288,12 +288,12 @@ public class ComposerWidget extends FrameLayout implements CustomView, View.OnCl
 
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    public void onGiphyClicked(Giphy giphy) {
+    public void onGiphyClicked(IntPair<Giphy> pair) {
         String index = KeyUtil.GIPHY_LARGE_DOWN_SAMPLE;
         EditText editor = binding.comment;
         int start = editor.getSelectionStart();
-        Gif gif = giphy.getImages().get(index);
-        editor.getEditableText().insert(start, MarkDown.convertImage(gif.getUrl()));
+        Gif gif = pair.getSecond().getImages().get(index);
+        editor.getEditableText().insert(start, MarkDownUtil.convertImage(gif.getUrl()));
     }
 
     public void appendText(String textValue) {

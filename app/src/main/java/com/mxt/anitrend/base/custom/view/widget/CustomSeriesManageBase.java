@@ -6,14 +6,20 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.AdapterView;
 import android.widget.RelativeLayout;
 
+import com.mxt.anitrend.R;
+import com.mxt.anitrend.adapter.spinner.IconArrayAdapter;
 import com.mxt.anitrend.base.interfaces.view.CustomView;
 import com.mxt.anitrend.model.entity.anilist.MediaList;
+import com.mxt.anitrend.model.entity.anilist.meta.MediaListOptions;
 import com.mxt.anitrend.model.entity.base.MediaBase;
 import com.mxt.anitrend.presenter.fragment.MediaPresenter;
+import com.mxt.anitrend.util.CompatUtil;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by max on 2018/01/20.
@@ -25,6 +31,12 @@ public abstract class CustomSeriesManageBase extends RelativeLayout implements C
     protected MediaPresenter presenter;
 
     protected MediaList model;
+
+    protected final Map<Integer, Integer> indexIconMap = new HashMap<Integer, Integer>() {{
+        put(0, R.drawable.ic_remove_red_eye_white_18dp); put(1, R.drawable.ic_bookmark_white_24dp);
+        put(2, R.drawable.ic_done_all_grey_600_24dp); put(3, R.drawable.ic_delete_red_600_18dp);
+        put(4, R.drawable.ic_pause_white_18dp); put(5, R.drawable.ic_repeat_white_18dp);
+    }};
 
     public CustomSeriesManageBase(Context context) {
         super(context);
@@ -55,6 +67,14 @@ public abstract class CustomSeriesManageBase extends RelativeLayout implements C
         presenter = new MediaPresenter(getContext());
     }
 
+    protected IconArrayAdapter getIconArrayAdapter() {
+        IconArrayAdapter iconArrayAdapter = new IconArrayAdapter(getContext(),
+                R.layout.adapter_spinner_item, R.id.spinner_text,
+                CompatUtil.getStringList(getContext(), R.array.media_list_status));
+        iconArrayAdapter.setIndexIconMap(indexIconMap);
+        return iconArrayAdapter;
+    }
+
     public void setModel(MediaBase mediaBase) {
         if(mediaBase.getMediaListEntry() != null) {
             this.model = mediaBase.getMediaListEntry();
@@ -67,6 +87,10 @@ public abstract class CustomSeriesManageBase extends RelativeLayout implements C
         }
         bindFields();
         populateFields();
+    }
+
+    public MediaListOptions getMediaListOptions() {
+        return presenter.getDatabase().getCurrentUser().getMediaListOptions();
     }
 
     public @NonNull MediaList getModel() {

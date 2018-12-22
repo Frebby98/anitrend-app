@@ -8,7 +8,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.mxt.anitrend.R;
@@ -55,17 +54,23 @@ public class CustomSeriesAnimeManage extends CustomSeriesManageBase {
     /**
      * Saves the current views states into the model
      * and returns a bundle of the params
+     *
      * @see com.mxt.anitrend.util.MediaListUtil
      */
     @Override
     public Bundle persistChanges() {
         model.setProgress(binding.diaCurrentProgress.getProgressCurrent());
         model.setRepeat(binding.diaCurrentRewatch.getProgressCurrent());
-        model.setScore(binding.diaCurrentScore.getProgressCurrent());
+
+        model.setScore(binding.diaCurrentScore.getScoreCurrent());
+
+        model.setStartedAt(binding.diaCurrentStartedAt.getDate());
+        model.setCompletedAt(binding.diaCurrentCompletedAt.getDate());
+
         model.setHidden(binding.diaCurrentPrivacy.isChecked());
         model.setNotes(binding.diaCurrentNotes.getFormattedText());
         model.setStatus(KeyUtil.MediaListStatus[binding.diaCurrentStatus.getSelectedItemPosition()]);
-        return MediaListUtil.getMediaListParams(model);
+        return MediaListUtil.getMediaListParams(model, getMediaListOptions().getScoreFormat());
     }
 
     @Override
@@ -76,26 +81,25 @@ public class CustomSeriesAnimeManage extends CustomSeriesManageBase {
 
     @Override
     protected void bindFields() {
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(), R.array.media_list_status, R.layout.adapter_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
-        binding.diaCurrentStatus.setAdapter(adapter);
+        binding.diaCurrentStatus.setAdapter(getIconArrayAdapter());
 
-        if(!TextUtils.isEmpty(model.getStatus()))
+        if (!TextUtils.isEmpty(model.getStatus()))
             binding.diaCurrentStatus.setSelection(CompatUtil.constructListFrom(KeyUtil.MediaListStatus).indexOf(model.getStatus()));
         else
             binding.diaCurrentStatus.setSelection(CompatUtil.constructListFrom(KeyUtil.MediaListStatus).indexOf(KeyUtil.PLANNING));
 
         binding.diaCurrentPrivacy.setChecked(model.isHidden());
-        if(model.getMedia().getEpisodes() > 0)
+        if (model.getMedia().getEpisodes() > 0)
             binding.diaCurrentProgress.setProgressMaximum(model.getMedia().getEpisodes());
 
-        binding.diaCurrentScore.setProgressMaximum(100);
-        binding.diaCurrentScore.setProgressCurrent(model.getScore());
+        binding.diaCurrentScore.setScoreFormat(getMediaListOptions().getScoreFormat());
+        binding.diaCurrentScore.setScoreCurrent(model.getScore());
+
         binding.diaCurrentProgress.setProgressCurrent(model.getProgress());
         binding.diaCurrentRewatch.setProgressCurrent(model.getRepeat());
+        binding.diaCurrentStartedAt.setDate(model.getStartedAt());
+        binding.diaCurrentCompletedAt.setDate(model.getCompletedAt());
 
         binding.diaCurrentStatus.setOnItemSelectedListener(this);
     }
@@ -106,7 +110,7 @@ public class CustomSeriesAnimeManage extends CustomSeriesManageBase {
     @Override
     public void onViewRecycled() {
         super.onViewRecycled();
-        if(binding != null)
+        if (binding != null)
             binding.unbind();
     }
 

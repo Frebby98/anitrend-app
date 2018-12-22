@@ -8,7 +8,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.mxt.anitrend.R;
@@ -62,11 +61,16 @@ public class CustomSeriesMangaManage extends CustomSeriesManageBase {
         model.setProgress(binding.diaCurrentChapters.getProgressCurrent());
         model.setRepeat(binding.diaCurrentReread.getProgressCurrent());
         model.setProgressVolumes(binding.diaCurrentVolumes.getProgressCurrent());
-        model.setScore(binding.diaCurrentScore.getProgressCurrent());
+
+        model.setScore(binding.diaCurrentScore.getScoreCurrent());
+
+        model.setStartedAt(binding.diaCurrentStartedAt.getDate());
+        model.setCompletedAt(binding.diaCurrentCompletedAt.getDate());
+
         model.setHidden(binding.diaCurrentPrivacy.isChecked());
         model.setNotes(binding.diaCurrentNotes.getFormattedText());
         model.setStatus(KeyUtil.MediaListStatus[binding.diaCurrentStatus.getSelectedItemPosition()]);
-        return MediaListUtil.getMediaListParams(model);
+        return MediaListUtil.getMediaListParams(model, getMediaListOptions().getScoreFormat());
     }
 
     @Override
@@ -77,12 +81,8 @@ public class CustomSeriesMangaManage extends CustomSeriesManageBase {
 
     @Override
     protected void bindFields() {
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(), R.array.media_list_status, R.layout.adapter_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
-        binding.diaCurrentStatus.setAdapter(adapter);
+        binding.diaCurrentStatus.setAdapter(getIconArrayAdapter());
 
         if(!TextUtils.isEmpty(model.getStatus()))
             binding.diaCurrentStatus.setSelection(CompatUtil.constructListFrom(KeyUtil.MediaListStatus).indexOf(model.getStatus()));
@@ -96,11 +96,14 @@ public class CustomSeriesMangaManage extends CustomSeriesManageBase {
         if(model.getMedia().getChapters() > 0)
             binding.diaCurrentChapters.setProgressMaximum(model.getMedia().getChapters());
 
-        binding.diaCurrentScore.setProgressMaximum(100);
-        binding.diaCurrentScore.setProgressCurrent(model.getScore());
+        binding.diaCurrentScore.setScoreFormat(getMediaListOptions().getScoreFormat());
+        binding.diaCurrentScore.setScoreCurrent(model.getScore());
+
         binding.diaCurrentChapters.setProgressCurrent(model.getProgress());
         binding.diaCurrentVolumes.setProgressCurrent(model.getProgressVolumes());
         binding.diaCurrentReread.setProgressCurrent(model.getRepeat());
+        binding.diaCurrentStartedAt.setDate(model.getStartedAt());
+        binding.diaCurrentCompletedAt.setDate(model.getCompletedAt());
 
         binding.diaCurrentStatus.setOnItemSelectedListener(this);
     }

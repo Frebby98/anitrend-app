@@ -22,6 +22,7 @@ import com.mxt.anitrend.model.entity.container.body.PageContainer;
 import com.mxt.anitrend.model.entity.container.request.QueryContainerBuilder;
 import com.mxt.anitrend.presenter.base.BasePresenter;
 import com.mxt.anitrend.util.CompatUtil;
+import com.mxt.anitrend.util.GraphUtil;
 import com.mxt.anitrend.util.KeyUtil;
 import com.mxt.anitrend.util.MediaActionUtil;
 import com.mxt.anitrend.util.NotifyUtil;
@@ -118,79 +119,6 @@ public class FeedListFragment extends FragmentBaseList<FeedList, PageContainer<F
         getViewModel().requestData(KeyUtil.FEED_LIST_REQ, getContext());
     }
 
-    /**
-     * When the target view from {@link View.OnClickListener}
-     * is clicked from a view holder this method will be called
-     *
-     * @param target view that has been clicked
-     * @param data   the model that at the click index
-     */
-    @Override
-    public void onItemClick(View target, FeedList data) {
-        Intent intent;
-        switch (target.getId()) {
-            case R.id.series_image:
-                MediaBase series = data.getMedia();
-                intent = new Intent(getActivity(), MediaActivity.class);
-                intent.putExtra(KeyUtil.arg_id, series.getId());
-                intent.putExtra(KeyUtil.arg_mediaType, series.getType());
-                CompatUtil.startRevealAnim(getActivity(), target, intent);
-                break;
-            case R.id.widget_comment:
-                intent = new Intent(getActivity(), CommentActivity.class);
-                intent.putExtra(KeyUtil.arg_model, data);
-                CompatUtil.startRevealAnim(getActivity(), target, intent);
-                break;
-            case R.id.widget_edit:
-                mBottomSheet = new BottomSheetComposer.Builder().setUserActivity(data)
-                        .setRequestMode(KeyUtil.MUT_SAVE_TEXT_FEED)
-                        .setTitle(R.string.edit_status_title)
-                        .build();
-                showBottomSheet();
-                break;
-            case R.id.widget_users:
-                List<UserBase> likes = data.getLikes();
-                if(likes.size() > 0) {
-                    mBottomSheet = new BottomSheetUsers.Builder()
-                            .setModel(likes)
-                            .setTitle(R.string.title_bottom_sheet_likes)
-                            .build();
-                    showBottomSheet();
-                } else
-                    NotifyUtil.makeText(getActivity(), R.string.text_no_likes, Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.user_avatar:
-                if(data.getUser() != null) {
-                    intent = new Intent(getActivity(), ProfileActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intent.putExtra(KeyUtil.arg_id, data.getUser().getId());
-                    CompatUtil.startRevealAnim(getActivity(), target, intent);
-                }
-                break;
-        }
-    }
-
-    /**
-     * When the target view from {@link View.OnLongClickListener}
-     * is clicked from a view holder this method will be called
-     *
-     * @param target view that has been long clicked
-     * @param data   the model that at the long click index
-     */
-    @Override
-    public void onItemLongClick(View target, FeedList data) {
-        switch (target.getId()) {
-            case R.id.series_image:
-                if(getPresenter().getApplicationPref().isAuthenticated()) {
-                    mediaActionUtil = new MediaActionUtil.Builder()
-                            .setId(data.getMedia().getId()).build(getActivity());
-                    mediaActionUtil.startSeriesAction();
-                } else
-                    NotifyUtil.makeText(getContext(), R.string.info_login_req, R.drawable.ic_group_add_grey_600_18dp, Toast.LENGTH_SHORT).show();
-                break;
-        }
-    }
-
     @Override @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     public void onModelChanged(BaseConsumer<FeedList> consumer) {
         Optional<IntPair<FeedList>> pairOptional;
@@ -241,13 +169,86 @@ public class FeedListFragment extends FragmentBaseList<FeedList, PageContainer<F
             if(content.hasPageInfo())
                 getPresenter().setPageInfo(content.getPageInfo());
             if(!content.isEmpty())
-                onPostProcessed(content.getPageData());
+                onPostProcessed(GraphUtil.filterFeedList(getPresenter(), content.getPageData()));
             else
                 onPostProcessed(Collections.emptyList());
         } else
             onPostProcessed(Collections.emptyList());
         if(mAdapter.getItemCount() < 1)
             onPostProcessed(null);
+    }
+
+    /**
+     * When the target view from {@link View.OnClickListener}
+     * is clicked from a view holder this method will be called
+     *
+     * @param target view that has been clicked
+     * @param data   the model that at the click index
+     */
+    @Override
+    public void onItemClick(View target, IntPair<FeedList> data) {
+        Intent intent;
+        switch (target.getId()) {
+            case R.id.series_image:
+                MediaBase series = data.getSecond().getMedia();
+                intent = new Intent(getActivity(), MediaActivity.class);
+                intent.putExtra(KeyUtil.arg_id, series.getId());
+                intent.putExtra(KeyUtil.arg_mediaType, series.getType());
+                CompatUtil.startRevealAnim(getActivity(), target, intent);
+                break;
+            case R.id.widget_comment:
+                intent = new Intent(getActivity(), CommentActivity.class);
+                intent.putExtra(KeyUtil.arg_model, data.getSecond());
+                CompatUtil.startRevealAnim(getActivity(), target, intent);
+                break;
+            case R.id.widget_edit:
+                mBottomSheet = new BottomSheetComposer.Builder().setUserActivity(data.getSecond())
+                        .setRequestMode(KeyUtil.MUT_SAVE_TEXT_FEED)
+                        .setTitle(R.string.edit_status_title)
+                        .build();
+                showBottomSheet();
+                break;
+            case R.id.widget_users:
+                List<UserBase> likes = data.getSecond().getLikes();
+                if(likes.size() > 0) {
+                    mBottomSheet = new BottomSheetUsers.Builder()
+                            .setModel(likes)
+                            .setTitle(R.string.title_bottom_sheet_likes)
+                            .build();
+                    showBottomSheet();
+                } else
+                    NotifyUtil.makeText(getActivity(), R.string.text_no_likes, Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.user_avatar:
+                if(data.getSecond().getUser() != null) {
+                    intent = new Intent(getActivity(), ProfileActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra(KeyUtil.arg_id, data.getSecond().getUser().getId());
+                    CompatUtil.startRevealAnim(getActivity(), target, intent);
+                }
+                break;
+        }
+    }
+
+    /**
+     * When the target view from {@link View.OnLongClickListener}
+     * is clicked from a view holder this method will be called
+     *
+     * @param target view that has been long clicked
+     * @param data   the model that at the long click index
+     */
+    @Override
+    public void onItemLongClick(View target, IntPair<FeedList> data) {
+        switch (target.getId()) {
+            case R.id.series_image:
+                if(getPresenter().getApplicationPref().isAuthenticated()) {
+                    mediaActionUtil = new MediaActionUtil.Builder()
+                            .setId(data.getSecond().getMedia().getId()).build(getActivity());
+                    mediaActionUtil.startSeriesAction();
+                } else
+                    NotifyUtil.makeText(getContext(), R.string.info_login_req, R.drawable.ic_group_add_grey_600_18dp, Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
 
     /**

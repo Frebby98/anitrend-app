@@ -10,6 +10,10 @@
     <color name="colorPrimaryDarker">#182128</color>
     <color name="colorAccentDark">#009688</color>
 
+    <!-- Color AMODark -->
+    <color name="colorBlack">#101010</color>
+    <color name="colorPrimaryBlack">#000000</color>
+
     <color name="colorGreyLight">#fafafa</color>
     <color name="colorAliceBlue">#FBFCFD</color>
     <color name="colorCornflowerBlue">#54A5FA</color>
@@ -39,6 +43,7 @@
 
     <color name="colorLight">#f1f1f1</color>
     <color name="colorDark">#1a1a1a</color>
+    <color name="colorGrey">#424242</color>
 
     <!--Content Colors-->
     <color name="colorTextTitleLight">@color/colorTextDark</color>
@@ -68,6 +73,6 @@
     <color name="black_transparent_image">#46000000</color>
     <color name="divider">#1f000000</color> <!-- 12% black -->
 
-
+    <color name="toolbar_transparent">#50000000</color>
 
 </resources>

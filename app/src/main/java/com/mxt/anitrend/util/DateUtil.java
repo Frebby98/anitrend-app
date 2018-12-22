@@ -33,6 +33,8 @@ public class DateUtil {
             KeyUtil.FALL, KeyUtil.FALL, KeyUtil.FALL,
             KeyUtil.WINTER
     };
+    
+    private static final String dateOutputFormat = "MMM dd, yyyy", dateInputFormat = "yyyy/MM/dd";
 
     /**
      * Gets current season title
@@ -40,13 +42,13 @@ public class DateUtil {
      *
      * @return Season name
      */
-    public static @KeyUtil.MediaSeason String getCurrentSeason(){
+    public static @KeyUtil.MediaSeason String getCurrentSeason() {
         int month = Calendar.getInstance().get(Calendar.MONTH);
         return seasons[month];
     }
 
     public static String getMediaSeason(FuzzyDate fuzzyDate){
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd",Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat(dateInputFormat,Locale.getDefault());
         try {
             Date converted = format.parse(String.valueOf(fuzzyDate));
             Calendar calendar = new GregorianCalendar(Locale.getDefault());
@@ -68,7 +70,7 @@ public class DateUtil {
      *
      * @return Season name
      */
-    public static int getMenuSelect(){
+    public static int getMenuSelect() {
         String value = seasons[Calendar.getInstance().get(Calendar.MONTH)];
         return CompatUtil.constructListFrom(KeyUtil.MediaSeason).indexOf(value);
     }
@@ -80,22 +82,22 @@ public class DateUtil {
      *
      * @return current year with a given delta
      */
-    public static int getCurrentYear(int delta){
+    public static int getCurrentYear(int delta) {
         if(Calendar.getInstance().get(Calendar.MONTH) >= 11 && getCurrentSeason().equals(KeyUtil.WINTER))
             return Calendar.getInstance().get(Calendar.YEAR) + delta;
-        return Calendar.getInstance().get(Calendar.YEAR);
+        return Calendar.getInstance().get(Calendar.YEAR) + delta;
     }
 
     /**
      * Converts unix time representation into current readable time
      * <br/>
      *
-     * @return A time format of dd MMM yyyy
+     * @return A time format of {@link DateUtil#dateOutputFormat}
      */
     public static @Nullable String convertDate(long value) {
         try {
             if(value != 0)
-                return new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(new Date(value*1000L));
+                return new SimpleDateFormat(dateOutputFormat, Locale.getDefault()).format(new Date(value*1000L));
         }catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -106,14 +108,14 @@ public class DateUtil {
      * Converts unix time representation into current readable time
      * <br/>
      *
-     * @return A time format of dd MMM yyyy
+     * @return A time format of {@link DateUtil#dateOutputFormat}
      */
     public static @Nullable String convertDate(FuzzyDate fuzzyDate) {
         try {
             if(fuzzyDate != null && fuzzyDate.isValidDate()) {
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateInputFormat, Locale.getDefault());
                 Date converted = simpleDateFormat.parse(String.valueOf(fuzzyDate));
-                return new SimpleDateFormat("dd MMM yyyy",Locale.getDefault()).format(converted);
+                return new SimpleDateFormat(dateOutputFormat,Locale.getDefault()).format(converted);
             }
         }catch (Exception ex) {
             ex.printStackTrace();
@@ -125,7 +127,7 @@ public class DateUtil {
      * Checks if the given data is newer than the current data on the device
      */
     private static boolean isNewerDate(FuzzyDate fuzzyDate) throws ParseException {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd",Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat(dateInputFormat,Locale.getDefault());
         Date converted = format.parse(String.valueOf(fuzzyDate));
         return converted.getTime() > System.currentTimeMillis();
     }
@@ -208,6 +210,15 @@ public class DateUtil {
      */
     public static int getDate() {
         return Calendar.getInstance().get(Calendar.DATE);
+    }
+
+
+    /**
+     * Get the current fuzzy date
+     */
+    public static @NonNull FuzzyDate getCurrentDate() {
+        Calendar calendar = Calendar.getInstance();
+        return new FuzzyDate(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR));
     }
 
     /**

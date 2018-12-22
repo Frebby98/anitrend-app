@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Filter;
 
-import com.annimon.stream.Stream;
 import com.bumptech.glide.Glide;
 import com.mxt.anitrend.R;
 import com.mxt.anitrend.base.custom.recycler.RecyclerViewAdapter;
@@ -19,10 +18,6 @@ import com.mxt.anitrend.model.entity.anilist.Media;
 import com.mxt.anitrend.model.entity.base.MediaBase;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.KeyUtil;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -115,17 +110,12 @@ public class MediaAdapter extends RecyclerViewAdapter<MediaBase> {
          */
         @Override @OnClick(R.id.container)
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
         @Override @OnLongClick(R.id.container)
-        public boolean onLongClick(View view) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemLongClick(view, data.get(index));
-            return true;
+        public boolean onLongClick(View v) {
+            return performLongClick(clickListener, data, v);
         }
     }
 
@@ -170,26 +160,14 @@ public class MediaAdapter extends RecyclerViewAdapter<MediaBase> {
             binding.unbind();
         }
 
-        /**
-         * Handle any onclick events from our views
-         * <br/>
-         *
-         * @param v the view that has been clicked
-         * @see View.OnClickListener
-         */
         @Override @OnClick(R.id.container)
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
         @Override @OnLongClick(R.id.container)
-        public boolean onLongClick(View view) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemLongClick(view, data.get(index));
-            return true;
+        public boolean onLongClick(View v) {
+            return performLongClick(clickListener, data, v);
         }
     }
 
@@ -233,26 +211,14 @@ public class MediaAdapter extends RecyclerViewAdapter<MediaBase> {
             binding.unbind();
         }
 
-        /**
-         * Handle any onclick events from our views
-         * <br/>
-         *
-         * @param v the view that has been clicked
-         * @see View.OnClickListener
-         */
         @Override @OnClick(R.id.container)
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
         @Override @OnLongClick(R.id.container)
-        public boolean onLongClick(View view) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemLongClick(view, data.get(index));
-            return true;
+        public boolean onLongClick(View v) {
+            return performLongClick(clickListener, data, v);
         }
     }
 }

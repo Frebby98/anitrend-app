@@ -17,7 +17,6 @@ import com.mxt.anitrend.util.KeyUtil;
  * Created by max on 2017/11/04.
  * Suggestions adapter
  */
-// TODO: 2018/04/07 Hide genres from filter list
 public class SuggestionListFragment extends MediaBrowseFragment {
 
     public static SuggestionListFragment newInstance(Bundle params) {
@@ -34,7 +33,8 @@ public class SuggestionListFragment extends MediaBrowseFragment {
     public void makeRequest() {
         ApplicationPref pref = getPresenter().getApplicationPref();
         Bundle bundle = getViewModel().getParams();
-        queryContainer.putVariable(KeyUtil.arg_genres, getPresenter().getTopFavouriteGenres())
+        queryContainer.putVariable(KeyUtil.arg_tagsInclude, getPresenter().getTopFavouriteTags(6))
+                .putVariable(KeyUtil.arg_genresInclude, getPresenter().getTopFavouriteGenres(4))
                 .putVariable(KeyUtil.arg_sort, pref.getMediaSort() + pref.getSortOrder())
                 .putVariable(KeyUtil.arg_page, getPresenter().getCurrentPage());
         bundle.putParcelable(KeyUtil.arg_graph_params, queryContainer);
@@ -45,6 +45,7 @@ public class SuggestionListFragment extends MediaBrowseFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         menu.findItem(R.id.action_genre).setVisible(false);
+        menu.findItem(R.id.action_tag).setVisible(false);
         menu.findItem(R.id.action_type).setVisible(false);
         menu.findItem(R.id.action_year).setVisible(false);
         menu.findItem(R.id.action_status).setVisible(false);

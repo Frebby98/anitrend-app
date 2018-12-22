@@ -14,8 +14,6 @@ import com.mxt.anitrend.databinding.AdapterStudioBinding;
 import com.mxt.anitrend.model.entity.base.StudioBase;
 import com.mxt.anitrend.util.CompatUtil;
 
-import java.util.List;
-
 import butterknife.OnClick;
 
 /**
@@ -77,23 +75,14 @@ public class StudioAdapter extends RecyclerViewAdapter<StudioBase> {
             binding.unbind();
         }
 
-        /**
-         * Handle any onclick events from our views
-         * <br/>
-         *
-         * @param v the view that has been clicked
-         * @see View.OnClickListener
-         */
         @Override @OnClick(R.id.container)
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
         @Override
-        public boolean onLongClick(View view) {
-            return false;
+        public boolean onLongClick(View v) {
+            return performLongClick(clickListener, data, v);
         }
     }
 }

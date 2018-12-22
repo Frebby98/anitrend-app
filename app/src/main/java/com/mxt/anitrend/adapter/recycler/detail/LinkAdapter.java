@@ -14,8 +14,6 @@ import com.mxt.anitrend.databinding.AdapterLinkBinding;
 import com.mxt.anitrend.model.entity.anilist.ExternalLink;
 import com.mxt.anitrend.util.CompatUtil;
 
-import java.util.List;
-
 import butterknife.OnClick;
 import butterknife.OnLongClick;
 
@@ -87,17 +85,12 @@ public class LinkAdapter extends RecyclerViewAdapter<ExternalLink> {
          */
         @Override @OnClick(R.id.container)
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
         @Override @OnLongClick(R.id.container)
         public boolean onLongClick(View view) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemLongClick(view, data.get(index));
-            return true;
+            return performLongClick(clickListener, data, view);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.mxt.anitrend.base.custom.activity;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -36,6 +37,7 @@ import com.mxt.anitrend.util.ApplicationPref;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.IntentBundleUtil;
 import com.mxt.anitrend.util.KeyUtil;
+import com.mxt.anitrend.util.LocaleUtil;
 import com.mxt.anitrend.util.MediaActionUtil;
 import com.mxt.anitrend.util.NotifyUtil;
 import com.mxt.anitrend.view.activity.index.MainActivity;
@@ -51,7 +53,7 @@ import butterknife.BindView;
 
 /**
  * Created by max on 2017/06/09.
- * Activity base <T type of data model, S extends CommonPresenter>
+ * Activity base <M type of data model, P extends CommonPresenter>
  */
 
 public abstract class ActivityBase<M, P extends CommonPresenter> extends AppCompatActivity implements Observer<M>, CommonPresenter.AbstractPresenter<P>,
@@ -89,8 +91,17 @@ public abstract class ActivityBase<M, P extends CommonPresenter> extends AppComp
      * @see ActivityBase#setNavigationStyle()
      */
     protected void configureActivity() {
-        setTheme((style = new ApplicationPref(this).getTheme()));
+        ApplicationPref applicationPref = new ApplicationPref(this);
+        if(!CompatUtil.isLightTheme((style = applicationPref.getTheme())) && applicationPref.isBlackThemeEnabled())
+            setTheme(R.style.AppThemeBlack);
+        else
+            setTheme(style);
         setNavigationStyle();
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleUtil.onAttach(base));
     }
 
     @Override
@@ -196,7 +207,7 @@ public abstract class ActivityBase<M, P extends CommonPresenter> extends AppComp
         return super.onOptionsItemSelected(item);
     }
 
-    protected boolean hasPermission(String permission) {
+    protected boolean requestPermissionIfMissing(String permission) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
         }
@@ -241,14 +252,21 @@ public abstract class ActivityBase<M, P extends CommonPresenter> extends AppComp
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION) {
             for (int i = 0; i < permissions.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    NotifyUtil.makeText(this, R.string.completed_success, Toast.LENGTH_SHORT).show();
-                    Log.i(TAG, "Granted " + permissions[i]);
-                }
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED)
+                    onPermissionGranted(permissions[i]);
                 else
                     NotifyUtil.makeText(this, R.string.text_permission_required, R.drawable.ic_warning_white_18dp, Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    /**
+     * Called for each of the requested permissions as they are granted
+     *
+     * @param permission the current permission granted
+     */
+    protected void onPermissionGranted(@NonNull String permission) {
+        Log.i(TAG, "Granted " + permission);
     }
 
     /**
@@ -376,7 +394,8 @@ public abstract class ActivityBase<M, P extends CommonPresenter> extends AppComp
         if(!TextUtils.isEmpty(error))
             Log.e(TAG, error);
         if(isAlive()) {
-            AnalyticsUtil.reportException(TAG, error);
+            if (getPresenter() != null && getPresenter().getApplicationPref().isCrashReportsEnabled())
+                AnalyticsUtil.reportException(TAG, error);
             NotifyUtil.createAlerter(this, getString(R.string.text_error_request), error,
                     R.drawable.ic_warning_white_18dp, R.color.colorStateOrange,
                     KeyUtil.DURATION_MEDIUM);

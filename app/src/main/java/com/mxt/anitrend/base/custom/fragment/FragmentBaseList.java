@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.annimon.stream.IntPair;
 import com.mxt.anitrend.R;
 import com.mxt.anitrend.base.custom.presenter.CommonPresenter;
 import com.mxt.anitrend.base.custom.recycler.RecyclerViewAdapter;
@@ -272,7 +273,9 @@ public abstract class FragmentBaseList<M, C, P extends CommonPresenter> extends 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if(getPresenter() != null && isFilterable && GraphUtil.isKeyFilter(key)) {
-            swipeRefreshLayout.setRefreshing(true);
+            showLoading();
+            if(mAdapter != null)
+                mAdapter.clearDataSet();
             onRefresh();
         }
     }
@@ -377,7 +380,7 @@ public abstract class FragmentBaseList<M, C, P extends CommonPresenter> extends 
      * @param data   the model that at the click index
      */
     @Override
-    public abstract void onItemClick(View target, M data);
+    public abstract void onItemClick(View target, IntPair<M> data);
 
     /**
      * When the target view from {@link View.OnLongClickListener}
@@ -387,6 +390,6 @@ public abstract class FragmentBaseList<M, C, P extends CommonPresenter> extends 
      * @param data   the model that at the long click index
      */
     @Override
-    public abstract void onItemLongClick(View target, M data);
+    public abstract void onItemLongClick(View target, IntPair<M> data);
 
 }

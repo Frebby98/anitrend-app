@@ -21,11 +21,9 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.mxt.anitrend.R;
-import com.mxt.anitrend.data.DatabaseHelper;
-import com.mxt.anitrend.model.entity.base.VersionBase;
-import com.mxt.anitrend.util.ApplicationPref;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.JobSchedulerUtil;
 
@@ -42,17 +40,26 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (CompatUtil.equals(key, getString(R.string.pref_key_sync_frequency)) || CompatUtil.equals(key, getString(R.string.pref_key_new_message_notifications)))
+    private SharedPreferences.OnSharedPreferenceChangeListener onSharedPreferenceChangeListener = (sharedPreferences, key) -> {
+        if (CompatUtil.equals(key, getString(R.string.pref_key_crash_reports)) || CompatUtil.equals(key, getString(R.string.pref_key_usage_analytics)) ||
+                CompatUtil.equals(key, getString(R.string.pref_key_selected_Language)) || CompatUtil.equals(key, getString(R.string.pref_key_black_theme))) {
+            // Change the application theme if the current theme is not in dark mode
+            if (CompatUtil.equals(key, getString(R.string.pref_key_black_theme)))
+                if(CompatUtil.isLightTheme(getApplicationContext()))
+                    applicationPref.toggleTheme();
+            Toast.makeText(getApplicationContext(), R.string.text_application_restart_required, Toast.LENGTH_LONG).show();
+        } else if (CompatUtil.equals(key, getString(R.string.pref_key_sync_frequency))) {
+            JobSchedulerUtil.cancelJob(getApplicationContext());
             JobSchedulerUtil.scheduleJob(getApplicationContext());
-        else if (CompatUtil.equals(key, ApplicationPref._updateChannel)) {
-            DatabaseHelper databaseHelper = new DatabaseHelper(getApplicationContext());
-            databaseHelper.getBoxStore(VersionBase.class).removeAll();
+        } else if (CompatUtil.equals(key, getString(R.string.pref_key_new_message_notifications))) {
+            if (applicationPref.isNotificationEnabled())
+                JobSchedulerUtil.scheduleJob(getApplicationContext());
+            else
+                JobSchedulerUtil.cancelJob(getApplicationContext());
         }
-    }
+    };
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -80,7 +87,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             if (TextUtils.isEmpty(stringValue)) {
                 // Empty values correspond to 'silent' (no ringtone).
                 preference.setSummary(R.string.pref_ringtone_silent);
-
             } else {
                 Ringtone ringtone = RingtoneManager.getRingtone(
                         preference.getContext(), Uri.parse(stringValue));
@@ -139,20 +145,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         setupActionBar();
     }
 
-    @Override
-    protected void onPause() {
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .unregisterOnSharedPreferenceChangeListener(this);
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this);
-    }
-
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
      */
@@ -199,10 +191,38 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
      */
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
+                || CustomizePreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
                 || PrivacyPreferenceFragment.class.getName().equals(fragmentName)
                 || NotificationPreferenceFragment.class.getName().equals(fragmentName);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class CustomizePreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_customize);
+            setHasOptionsMenu(true);
+
+            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
+            // to their values. When their values change, their summaries are
+            // updated to reflect the new value, per the Android Design
+            // guidelines.
+            // bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_key_amoled_theme)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_key_selected_Language)));
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -273,6 +293,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_key_sync_frequency)));
         }
 
+
+
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
@@ -298,7 +320,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-//            bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_key_crash_reports)));
+            // bindPreferenceSummaryToValue(findPreference(getString(R.string.pref_key_crash_reports)));
         }
 
         @Override
@@ -312,5 +334,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             }
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        if (applicationPref != null)
+            applicationPref.getSharedPreferences()
+                    .registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
+    }
+
+    @Override
+    protected void onPause() {
+        if (applicationPref != null)
+            applicationPref.getSharedPreferences()
+                    .unregisterOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
+        super.onPause();
     }
 }

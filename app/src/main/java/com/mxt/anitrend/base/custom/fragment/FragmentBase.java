@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.annimon.stream.IntPair;
 import com.mxt.anitrend.R;
 import com.mxt.anitrend.base.custom.presenter.CommonPresenter;
 import com.mxt.anitrend.base.custom.sheet.BottomSheetBase;
@@ -28,7 +29,7 @@ import com.mxt.anitrend.base.custom.viewmodel.ViewModelBase;
 import com.mxt.anitrend.base.interfaces.event.ActionModeListener;
 import com.mxt.anitrend.base.interfaces.event.ItemClickListener;
 import com.mxt.anitrend.base.interfaces.event.ResponseCallback;
-import com.mxt.anitrend.util.ActionModeHelper;
+import com.mxt.anitrend.util.ActionModeUtil;
 import com.mxt.anitrend.util.AnalyticsUtil;
 import com.mxt.anitrend.util.MediaActionUtil;
 
@@ -42,7 +43,7 @@ public abstract class FragmentBase<M, P extends CommonPresenter, VM> extends Fra
     protected boolean isFilterable, isPager, isMenuDisabled, isFeed, hasSubscriber;
 
     private @MenuRes int inflateMenu;
-    private ActionModeHelper<M> actionMode;
+    private ActionModeUtil<M> actionMode;
     protected ViewModelBase<VM> viewModel;
     private CommonPresenter presenter;
     protected MediaActionUtil mediaActionUtil;
@@ -263,10 +264,10 @@ public abstract class FragmentBase<M, P extends CommonPresenter, VM> extends Fra
     public abstract void onChanged(@Nullable VM model);
 
     protected void setActionModeEnabled(boolean isEnabled) {
-        this.actionMode = new ActionModeHelper<>(this, isEnabled);
+        this.actionMode = new ActionModeUtil<>(this, isEnabled);
     }
 
-    protected ActionModeHelper<M> getActionMode() {
+    protected ActionModeUtil<M> getActionMode() {
         return actionMode;
     }
 
@@ -332,7 +333,8 @@ public abstract class FragmentBase<M, P extends CommonPresenter, VM> extends Fra
     public void showError(String error) {
         if(!TextUtils.isEmpty(error)) {
             Log.e(TAG, error);
-            AnalyticsUtil.reportException(TAG, error);
+            if (getPresenter() != null && getPresenter().getApplicationPref().isCrashReportsEnabled())
+                AnalyticsUtil.reportException(TAG, error);
         }
     }
 
@@ -360,7 +362,7 @@ public abstract class FragmentBase<M, P extends CommonPresenter, VM> extends Fra
      * @param data   the model that at the click index
      */
     @Override
-    public void onItemClick(View target, M data) {
+    public void onItemClick(View target, IntPair<M> data) {
 
     }
 
@@ -372,7 +374,7 @@ public abstract class FragmentBase<M, P extends CommonPresenter, VM> extends Fra
      * @param data   the model that at the long click index
      */
     @Override
-    public void onItemLongClick(View target, M data) {
+    public void onItemLongClick(View target, IntPair<M> data) {
 
     }
 }

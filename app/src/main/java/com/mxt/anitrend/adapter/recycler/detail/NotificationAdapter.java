@@ -9,18 +9,18 @@ import android.widget.Filter;
 
 import com.bumptech.glide.Glide;
 import com.mxt.anitrend.R;
+import com.mxt.anitrend.adapter.recycler.shared.UnresolvedViewHolder;
 import com.mxt.anitrend.base.custom.recycler.RecyclerViewAdapter;
 import com.mxt.anitrend.base.custom.recycler.RecyclerViewHolder;
 import com.mxt.anitrend.base.custom.view.image.AspectImageView;
 import com.mxt.anitrend.databinding.AdapterNotificationBinding;
+import com.mxt.anitrend.databinding.CustomRecyclerUnresolvedBinding;
 import com.mxt.anitrend.model.entity.anilist.Notification;
 import com.mxt.anitrend.model.entity.base.NotificationHistory;
 import com.mxt.anitrend.model.entity.base.NotificationHistory_;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.DateUtil;
 import com.mxt.anitrend.util.KeyUtil;
-
-import java.util.List;
 
 import butterknife.OnClick;
 import butterknife.OnLongClick;
@@ -42,8 +42,30 @@ public class NotificationAdapter extends RecyclerViewAdapter<Notification> {
 
     @NonNull
     @Override
-    public RecyclerViewHolder<Notification> onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new NotificationHolder(AdapterNotificationBinding.inflate(CompatUtil.getLayoutInflater(parent.getContext()), parent, false));
+    public RecyclerViewHolder<Notification> onCreateViewHolder(@NonNull ViewGroup parent, @KeyUtil.RecyclerViewType int viewType) {
+        if (viewType == KeyUtil.RECYCLER_TYPE_CONTENT)
+            return new NotificationHolder(AdapterNotificationBinding.inflate(CompatUtil.getLayoutInflater(parent.getContext()), parent, false));
+        return new UnresolvedViewHolder<>(CustomRecyclerUnresolvedBinding.inflate(CompatUtil.getLayoutInflater(parent.getContext()), parent, false));
+    }
+
+    /**
+     * Return the view type of the item at <code>position</code> for the purposes
+     * of view recycling.
+     *
+     * <p>The default implementation of this method returns 0, making the assumption of
+     * a single view type for the adapter. Unlike ListView adapters, types need not
+     * be contiguous. Consider using id resources to uniquely identify item view types.
+     *
+     * @param position position to query
+     * @return integer value identifying the type of the view needed to represent the item at
+     * <code>position</code>. Type codes need not be contiguous.
+     */
+    @Override
+    public int getItemViewType(int position) {
+        final Notification notification = data.get(position);
+        if (!CompatUtil.equals(notification.getType(), KeyUtil.AIRING) && notification.getUser() == null)
+            return KeyUtil.RECYCLER_TYPE_ERROR;
+        return KeyUtil.RECYCLER_TYPE_CONTENT;
     }
 
     /**
@@ -93,8 +115,10 @@ public class NotificationAdapter extends RecyclerViewAdapter<Notification> {
 
             binding.notificationTime.setText(DateUtil.getPrettyDateUnix(model.getCreatedAt()));
 
-            if(!CompatUtil.equals(model.getType(), KeyUtil.AIRING))
-                AspectImageView.setImage(binding.notificationImg, model.getUser().getAvatar().getLarge());
+            if(!CompatUtil.equals(model.getType(), KeyUtil.AIRING)) {
+                if (model.getUser() != null && model.getUser().getAvatar() != null)
+                    AspectImageView.setImage(binding.notificationImg, model.getUser().getAvatar().getLarge());
+            }
             else
                 AspectImageView.setImage(binding.notificationImg, model.getMedia().getCoverImage().getLarge());
 
@@ -177,32 +201,14 @@ public class NotificationAdapter extends RecyclerViewAdapter<Notification> {
             binding.unbind();
         }
 
-        /**
-         * Handle any onclick events from our views
-         * <br/>
-         *
-         * @param v the view that has been clicked
-         * @see View.OnClickListener
-         */
         @Override @OnClick({R.id.container, R.id.notification_img})
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
-        /**
-         * Called when a view has been clicked and held.
-         *
-         * @param v The view that was clicked and held.
-         * @return true if the callback consumed the long click, false otherwise.
-         */
         @Override @OnLongClick(R.id.container)
         public boolean onLongClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemLongClick(v, data.get(index));
-            return true;
+            return performLongClick(clickListener, data, v);
         }
     }
 }

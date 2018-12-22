@@ -1,6 +1,7 @@
 package com.mxt.anitrend.util;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
@@ -12,8 +13,13 @@ import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.Theme;
+import com.mxt.anitrend.BuildConfig;
 import com.mxt.anitrend.R;
+import com.mxt.anitrend.base.custom.view.text.RichMarkdownTextView;
+import com.mxt.anitrend.base.custom.view.text.SingleLineTextView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 
 /**
@@ -43,7 +49,7 @@ public class DialogUtil {
                                     if(editText != null) {
                                         if(!TextUtils.isEmpty(editText.getText())) {
                                             int start = editor.getSelectionStart();
-                                            editor.getEditableText().insert(start, MarkDown.convertLink(editText.getText()));
+                                            editor.getEditableText().insert(start, MarkDownUtil.convertLink(editText.getText()));
                                             dialog.dismiss();
                                         } else {
                                             NotifyUtil.makeText(context, R.string.input_empty_warning, Toast.LENGTH_SHORT).show();
@@ -68,7 +74,7 @@ public class DialogUtil {
                                     if(editText != null) {
                                         if(!TextUtils.isEmpty(editText.getText())) {
                                             int start = editor.getSelectionStart();
-                                            editor.getEditableText().insert(start, MarkDown.convertImage(editText.getText()));
+                                            editor.getEditableText().insert(start, MarkDownUtil.convertImage(editText.getText()));
                                             dialog.dismiss();
                                         } else {
                                             NotifyUtil.makeText(context, R.string.input_empty_warning, Toast.LENGTH_SHORT).show();
@@ -93,7 +99,7 @@ public class DialogUtil {
                                     if(editText != null) {
                                         if(!TextUtils.isEmpty(editText.getText())) {
                                             int start = editor.getSelectionStart();
-                                            editor.getEditableText().insert(start, MarkDown.convertYoutube(editText.getText()));
+                                            editor.getEditableText().insert(start, MarkDownUtil.convertYoutube(editText.getText()));
                                             dialog.dismiss();
                                         } else {
                                             NotifyUtil.makeText(context, R.string.input_empty_warning, Toast.LENGTH_SHORT).show();
@@ -118,7 +124,7 @@ public class DialogUtil {
                                     if(editText != null) {
                                         if(!TextUtils.isEmpty(editText.getText())) {
                                             int start = editor.getSelectionStart();
-                                            editor.getEditableText().insert(start, MarkDown.convertVideo(editText.getText()));
+                                            editor.getEditableText().insert(start, MarkDownUtil.convertVideo(editText.getText()));
                                             dialog.dismiss();
                                         } else {
                                             NotifyUtil.makeText(context, R.string.input_empty_warning, Toast.LENGTH_SHORT).show();
@@ -159,7 +165,7 @@ public class DialogUtil {
         createDefaultDialog(context).title(title)
                 .positiveText(R.string.Close)
                 .icon(CompatUtil.getTintedDrawable(context, R.drawable.ic_new_releases_white_24dp))
-                .content(MarkDown.convert(content))
+                .content(MarkDownUtil.convert(content))
                 .autoDismiss(true).show();
     }
 
@@ -169,7 +175,7 @@ public class DialogUtil {
                 .negativeText(negative)
                 .neutralText(neutral)
                 .icon(CompatUtil.getTintedDrawable(context, R.drawable.ic_new_releases_white_24dp))
-                .content(MarkDown.convert(content))
+                .content(MarkDownUtil.convert(content))
                 .autoDismiss(true).onAny(singleButtonCallback).show();
     }
 
@@ -178,7 +184,7 @@ public class DialogUtil {
                 .positiveText(positive)
                 .negativeText(negative)
                 .icon(CompatUtil.getTintedDrawable(context, R.drawable.ic_new_releases_white_24dp))
-                .content(MarkDown.convert(content))
+                .content(MarkDownUtil.convert(content))
                 .autoDismiss(true).onAny(singleButtonCallback).show();
     }
 
@@ -191,6 +197,30 @@ public class DialogUtil {
                 .icon(CompatUtil.getTintedDrawable(context, R.drawable.ic_new_releases_white_24dp))
                 .itemsCallbackMultiChoice(selectedIndices,listCallbackMultiChoice)
                 .autoDismiss(true).onAny(singleButtonCallback).show();
+    }
+
+    public static void createChangeLog(Context context) {
+        try {
+            MaterialDialog materialDialog = createDefaultDialog(context)
+                    .customView(R.layout.dialog_changelog, true)
+                    .build();
+
+            SingleLineTextView singleLineTextView = (SingleLineTextView) materialDialog.findViewById(R.id.changelog_version);
+            singleLineTextView.setText(String.format("v%s", BuildConfig.VERSION_NAME));
+
+            AssetManager assetManager = context.getAssets();
+            InputStream inputStream = assetManager.open("changelog.md");
+            StringBuilder stringBuilder = new StringBuilder();
+            int buffer;
+            while ((buffer = inputStream.read()) != -1)
+                stringBuilder.append((char)buffer);
+            RichMarkdownTextView richMarkdownTextView = (RichMarkdownTextView) materialDialog.findViewById(R.id.changelog_information);
+            RichMarkdownTextView.richMarkDown(richMarkdownTextView, stringBuilder.toString());
+
+            materialDialog.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

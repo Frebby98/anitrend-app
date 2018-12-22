@@ -15,8 +15,6 @@ import com.mxt.anitrend.model.entity.anilist.FeedReply;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.KeyUtil;
 
-import java.util.List;
-
 import butterknife.OnClick;
 
 /**
@@ -109,14 +107,12 @@ public class CommentAdapter extends RecyclerViewAdapter<FeedReply> {
          */
         @Override @OnClick({R.id.widget_edit, R.id.widget_users, R.id.user_avatar, R.id.widget_mention})
         public void onClick(View v) {
-            int index;
-            if((index = getAdapterPosition()) > -1)
-                clickListener.onItemClick(v, data.get(index));
+            performClick(clickListener, data, v);
         }
 
         @Override
         public boolean onLongClick(View view) {
-            return false;
+            return performLongClick(clickListener, data, view);
         }
     }
 }

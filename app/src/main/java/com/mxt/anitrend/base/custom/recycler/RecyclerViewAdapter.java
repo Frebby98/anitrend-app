@@ -16,7 +16,7 @@ import com.mxt.anitrend.base.interfaces.base.BaseAnimation;
 import com.mxt.anitrend.base.interfaces.event.ItemClickListener;
 import com.mxt.anitrend.base.interfaces.event.RecyclerChangeListener;
 import com.mxt.anitrend.presenter.base.BasePresenter;
-import com.mxt.anitrend.util.ActionModeHelper;
+import com.mxt.anitrend.util.ActionModeUtil;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.KeyUtil;
 
@@ -36,7 +36,7 @@ public abstract class RecyclerViewAdapter<T> extends RecyclerView.Adapter<Recycl
     protected BasePresenter presenter;
     protected ItemClickListener<T> clickListener;
 
-    private ActionModeHelper<T> actionMode;
+    private ActionModeUtil<T> actionMode;
     private BaseAnimation customAnimation;
 
     private int lastPosition;
@@ -61,7 +61,7 @@ public abstract class RecyclerViewAdapter<T> extends RecyclerView.Adapter<Recycl
         return data.get(position).hashCode();
     }
 
-    public void setActionModeCallback(ActionModeHelper<T> selectorCallback) {
+    public void setActionModeCallback(ActionModeUtil<T> selectorCallback) {
         this.actionMode = selectorCallback;
         this.actionMode.setRecyclerAdapter(this);
     }
@@ -114,7 +114,7 @@ public abstract class RecyclerViewAdapter<T> extends RecyclerView.Adapter<Recycl
     public void onViewAttachedToWindow(@NonNull RecyclerViewHolder<T> holder) {
         super.onViewAttachedToWindow(holder);
         if(holder.itemView.getLayoutParams() instanceof StaggeredGridLayoutManager.LayoutParams)
-            setLayoutSpanSize((StaggeredGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams(), holder.getLayoutPosition());
+            setLayoutSpanSize((StaggeredGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams(), holder.getAdapterPosition());
     }
 
     @Override
@@ -241,7 +241,7 @@ public abstract class RecyclerViewAdapter<T> extends RecyclerView.Adapter<Recycl
     }
 
     private boolean isFullSpanItem(int position) {
-        int viewType = getItemViewType(position);
+        int viewType = position != RecyclerView.NO_POSITION ? getItemViewType(position) : KeyUtil.RECYCLER_TYPE_ERROR;
         return viewType == KeyUtil.RECYCLER_TYPE_HEADER || viewType == KeyUtil.RECYCLER_TYPE_EMPTY ||
                 viewType == KeyUtil.RECYCLER_TYPE_LOADING || viewType == KeyUtil.RECYCLER_TYPE_ERROR;
     }

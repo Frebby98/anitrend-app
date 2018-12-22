@@ -1,5 +1,6 @@
 package com.mxt.anitrend.base.custom.view.widget;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,12 +9,16 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.SnapHelper;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import com.annimon.stream.IntPair;
+import com.mxt.anitrend.R;
 import com.mxt.anitrend.adapter.recycler.detail.ImagePreviewAdapter;
 import com.mxt.anitrend.base.custom.recycler.RecyclerViewAdapter;
 import com.mxt.anitrend.base.interfaces.event.ItemClickListener;
@@ -21,10 +26,11 @@ import com.mxt.anitrend.base.interfaces.view.CustomView;
 import com.mxt.anitrend.databinding.WidgetStatusBinding;
 import com.mxt.anitrend.model.entity.anilist.FeedList;
 import com.mxt.anitrend.model.entity.anilist.FeedReply;
+import com.mxt.anitrend.util.CenterSnapUtil;
 import com.mxt.anitrend.util.CompatUtil;
 import com.mxt.anitrend.util.KeyUtil;
-import com.mxt.anitrend.util.LinearScaleHelper;
-import com.mxt.anitrend.util.PatternMatcher;
+import com.mxt.anitrend.util.NotifyUtil;
+import com.mxt.anitrend.util.RegexUtil;
 import com.mxt.anitrend.view.activity.base.ImagePreviewActivity;
 import com.mxt.anitrend.view.activity.base.VideoPlayerActivity;
 
@@ -36,11 +42,10 @@ import java.util.regex.Matcher;
  * Created by max on 2017/11/25.
  */
 
-public class StatusContentWidget extends LinearLayout implements CustomView, LinearScaleHelper.PageChangeListener, ItemClickListener<String> {
+public class StatusContentWidget extends LinearLayout implements CustomView, ItemClickListener<String>, CenterSnapUtil.PositionChangeListener {
 
     private List<String> contentLinks, contentTypes;
     private WidgetStatusBinding binding;
-    private LinearScaleHelper linearScaleHelper;
 
     public StatusContentWidget(@NonNull Context context) {
         super(context);
@@ -71,7 +76,8 @@ public class StatusContentWidget extends LinearLayout implements CustomView, Lin
         binding = WidgetStatusBinding.inflate(LayoutInflater.from(getContext()), this, true);
         binding.widgetStatusRecycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         binding.widgetStatusRecycler.setNestedScrollingEnabled(true);
-        linearScaleHelper = new LinearScaleHelper();
+        SnapHelper snapHelper = new CenterSnapUtil(this);
+        snapHelper.attachToRecyclerView(binding.widgetStatusRecycler);
     }
 
     public void setModel(FeedList model) {
@@ -95,14 +101,11 @@ public class StatusContentWidget extends LinearLayout implements CustomView, Lin
     @Override
     public void onViewRecycled() {
         contentLinks = null; contentTypes = null;
-        binding.widgetStatusRecycler.onViewRecycled();
-        if(linearScaleHelper != null)
-            linearScaleHelper.onViewRecycled();
     }
 
     private void findMediaAttachments(@Nullable String value) {
         if(!TextUtils.isEmpty(value)) {
-            Matcher matcher = PatternMatcher.findMedia(value);
+            Matcher matcher = RegexUtil.findMedia(value);
             contentLinks = new ArrayList<>();
             contentTypes = new ArrayList<>();
             while (matcher.find()) {
@@ -110,8 +113,8 @@ public class StatusContentWidget extends LinearLayout implements CustomView, Lin
                 String tag = matcher.group(gc - 1);
                 String media = matcher.group(gc);
                 contentTypes.add(tag);
-                if (tag.equals(PatternMatcher.KEY_YOU))
-                    contentLinks.add(PatternMatcher.buildYoutube(media.replace("(", "").replace(")", "")));
+                if (tag.equals(RegexUtil.KEY_YOU))
+                    contentLinks.add(RegexUtil.buildYoutube(media.replace("(", "").replace(")", "")));
                 else
                     contentLinks.add(media.replace("(", "").replace(")", ""));
             }
@@ -132,13 +135,6 @@ public class StatusContentWidget extends LinearLayout implements CustomView, Lin
                 binding.widgetStatusIndicator.setVisibility(VISIBLE);
                 binding.widgetStatusIndicator.setMaximum(previewAdapter.getItemCount());
                 binding.widgetStatusIndicator.setCurrentPosition(1);
-
-                linearScaleHelper.setPageChangeListener(this);
-
-                linearScaleHelper.setScale(1.4f);
-                linearScaleHelper.setPagePadding(0);
-                linearScaleHelper.setShowLeftCardWidth(0);
-                linearScaleHelper.attachToRecyclerView(binding.widgetStatusRecycler);
             }
             binding.widgetSlideHolder.setVisibility(VISIBLE);
         } else
@@ -155,28 +151,33 @@ public class StatusContentWidget extends LinearLayout implements CustomView, Lin
      * is clicked from a view holder this method will be called
      *
      * @param target view that has been clicked
-     * @param data   the model that at the click index
+     * @param data   the model that at the clicked index
      */
     @Override
-    public void onItemClick(View target, String data) {
+    public void onItemClick(View target, IntPair<String> data) {
         Intent intent;
-        switch (contentTypes.get(CompatUtil.getIndexOf(contentLinks, data))) {
-            case PatternMatcher.KEY_IMG:
+        switch (contentTypes.get(data.getFirst()).toLowerCase()) {
+            case RegexUtil.KEY_IMG:
                 intent = new Intent(getContext(), ImagePreviewActivity.class);
-                intent.putExtra(KeyUtil.arg_model, data);
+                intent.putExtra(KeyUtil.arg_model, data.getSecond());
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getContext().startActivity(intent);
                 break;
-            case PatternMatcher.KEY_WEB:
+            case RegexUtil.KEY_WEB:
                 intent = new Intent(getContext(), VideoPlayerActivity.class);
-                intent.putExtra(KeyUtil.arg_model, data);
+                intent.putExtra(KeyUtil.arg_model, data.getSecond());
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 getContext().startActivity(intent);
                 break;
-            case PatternMatcher.KEY_YOU:
-                intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(data));
-                getContext().startActivity(intent);
+            case RegexUtil.KEY_YOU:
+                try {
+                    intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(data.getSecond()));
+                    getContext().startActivity(intent);
+                } catch (ActivityNotFoundException e) {
+                    e.printStackTrace();
+                    NotifyUtil.makeText(getContext(), R.string.init_youtube_missing, Toast.LENGTH_SHORT).show();
+                }
                 break;
         }
     }
@@ -186,10 +187,10 @@ public class StatusContentWidget extends LinearLayout implements CustomView, Lin
      * is clicked from a view holder this method will be called
      *
      * @param target view that has been long clicked
-     * @param data   the model that at the long click index
+     * @param data   the model that at the long clicked index
      */
     @Override
-    public void onItemLongClick(View target, String data) {
+    public void onItemLongClick(View target, IntPair<String> data) {
 
     }
 }

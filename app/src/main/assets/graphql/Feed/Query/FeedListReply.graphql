@@ -95,7 +95,6 @@ query FeedListReply($id: Int, $asHtml: Boolean = false) {
           episodes
           chapters
           volumes
-          isAdult
           isFavourite
           nextAiringEpisode {
             ... on AiringSchedule {
@@ -103,6 +102,11 @@ query FeedListReply($id: Int, $asHtml: Boolean = false) {
               airingAt
               timeUntilAiring
               episode
+            }
+          }
+          mediaListEntry {
+            ... on MediaList {
+              status
             }
           }
         }

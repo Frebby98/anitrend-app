@@ -4,10 +4,15 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.annotation.IdRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StyleRes;
 
+import com.mxt.anitrend.BuildConfig;
 import com.mxt.anitrend.R;
+
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Created by max on 2017/09/16.
@@ -19,6 +24,7 @@ public class ApplicationPref {
     private Context context;
 
     /** Base Application Values */
+    private final String _versionCode = "_versionCode";
     private final String _freshInstall = "_freshInstall";
     private final String _isAuthenticated = "_isAuthenticated";
 
@@ -27,17 +33,19 @@ public class ApplicationPref {
     public static final String _updateChannel = "_updateChannel";
 
     /** Api Keys */
-    private final String _sortOrder = "_sortOrder";
-    private final String _mediaStatus = "_mediaStatus";
-    private final String _mediaFormat = "_mediaFormat";
-    private final String _mediaSource = "_mediaSource";
-    private final String _airingSort = "_airingSort";
-    private final String _characterSort = "_characterSort";
-    private final String _mediaListSort = "_mediaListSort";
-    private final String _mediaSort = "_mediaSort";
-    private final String _mediaTrendSort = "_mediaTrendSort";
-    private final String _reviewSort = "_reviewSort";
-    private final String _staffSort = "_staffSort";
+    private static final String _genreFilter = "_genreFilter";
+    private static final String _tagFilter = "_tagFilter";
+    private static final String _sortOrder = "_sortOrder";
+    private static final String _mediaStatus = "_mediaStatus";
+    private static final String _mediaFormat = "_mediaFormat";
+    private static final String _mediaSource = "_mediaSource";
+    private static final String _airingSort = "_airingSort";
+    private static final String _characterSort = "_characterSort";
+    public static final String _mediaListSort = "_mediaListSort";
+    private static final String _mediaSort = "_mediaSort";
+    private static final String _mediaTrendSort = "_mediaTrendSort";
+    private static final String _reviewSort = "_reviewSort";
+    private static final String _staffSort = "_staffSort";
 
     private SharedPreferences sharedPreferences;
 
@@ -69,6 +77,10 @@ public class ApplicationPref {
     public @StyleRes int getTheme() {
         @StyleRes int style = sharedPreferences.getInt(_isLightTheme, R.style.AppThemeLight);
         return style;
+    }
+
+    public boolean isBlackThemeEnabled() {
+        return sharedPreferences.getBoolean(context.getString(R.string.pref_key_black_theme), false);
     }
 
     // Returns the IDs of the startup page
@@ -105,6 +117,10 @@ public class ApplicationPref {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(_freshInstall, false);
         editor.apply();
+    }
+
+    public String getUserLanguage() {
+            return sharedPreferences.getString(context.getString(R.string.pref_key_selected_Language), Locale.getDefault().getLanguage());
     }
 
     //Returns amount of time in seconds
@@ -277,5 +293,41 @@ public class ApplicationPref {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(_updateChannel, channel);
         editor.apply();
+    }
+
+    public boolean isUpdated() {
+        return sharedPreferences.getInt(_versionCode, 1) < BuildConfig.VERSION_CODE;
+    }
+
+    public void setUpdated() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(_versionCode, BuildConfig.VERSION_CODE);
+        editor.apply();
+    }
+
+    public void setSelectedGenres(@Nullable Map<Integer, String> selectedIndices) {
+        String selected = new GenreTagUtil()
+                .convertToJson(selectedIndices);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(_genreFilter, selected);
+        editor.apply();
+    }
+
+    public @NonNull Map<Integer, String> getSelectedGenres() {
+        String selected = sharedPreferences.getString(_genreFilter, null);
+        return new GenreTagUtil().convertToEntity(selected);
+    }
+
+    public void setSelectedTags(@Nullable Map<Integer, String> selectedIndices) {
+        String selected = new GenreTagUtil()
+                .convertToJson(selectedIndices);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(_tagFilter, selected);
+        editor.apply();
+    }
+
+    public @NonNull Map<Integer, String> getSelectedTags() {
+        String selected = sharedPreferences.getString(_tagFilter, null);
+        return new GenreTagUtil().convertToEntity(selected);
     }
 }

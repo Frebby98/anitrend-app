@@ -2,12 +2,13 @@ package com.mxt.anitrend.adapter.recycler.shared;
 
 import android.view.View;
 
+import com.annimon.stream.IntPair;
 import com.bumptech.glide.Glide;
 import com.mxt.anitrend.R;
 import com.mxt.anitrend.base.custom.recycler.RecyclerViewHolder;
 import com.mxt.anitrend.base.interfaces.event.ItemClickListener;
 import com.mxt.anitrend.databinding.AdapterMediaHeaderBinding;
-import com.mxt.anitrend.model.entity.anilist.Media;
+import com.mxt.anitrend.model.entity.base.MediaBase;
 import com.mxt.anitrend.model.entity.group.RecyclerItem;
 
 import butterknife.OnClick;
@@ -42,7 +43,7 @@ public class GroupMediaViewHolder extends RecyclerViewHolder<RecyclerItem> {
      */
     @Override
     public void onBindViewHolder(RecyclerItem recyclerItem) {
-        Media model = (Media) recyclerItem;
+        MediaBase model = (MediaBase) recyclerItem;
         binding.setModel(model);
         binding.seriesTitle.setTitle(model);
         binding.executePendingBindings();
@@ -61,23 +62,20 @@ public class GroupMediaViewHolder extends RecyclerViewHolder<RecyclerItem> {
         binding.unbind();
     }
 
-    /**
-     * Handle any onclick events from our views
-     * <br/>
-     *
-     * @param v the view that has been clicked
-     * @see View.OnClickListener
-     */
     @Override @OnClick(R.id.container)
     public void onClick(View v) {
-        if(binding != null && binding.getModel() != null && getAdapterPosition() > -1)
-            clickListener.onItemClick(v, binding.getModel());
+        IntPair<Boolean> pair = isValidIndexPair();
+        if(binding != null && binding.getModel() != null && isClickable(binding.getModel()) && pair.getSecond())
+            clickListener.onItemClick(v, new IntPair<>(pair.getFirst(), binding.getModel()));
     }
 
     @Override @OnLongClick(R.id.container)
-    public boolean onLongClick(View view) {
-        if(binding != null && binding.getModel() != null && getAdapterPosition() > -1)
-            clickListener.onItemLongClick(view, binding.getModel());
-        return true;
+    public boolean onLongClick(View v) {
+        IntPair<Boolean> pair = isValidIndexPair();
+        if(binding != null && binding.getModel() != null && isLongClickable(binding.getModel()) && pair.getSecond()) {
+            clickListener.onItemLongClick(v, new IntPair<>(pair.getFirst(), binding.getModel()));
+            return true;
+        }
+        return false;
     }
 }

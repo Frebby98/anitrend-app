@@ -31,8 +31,8 @@
 
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
-        <item name="android:statusBarColor">@color/colorRootDark</item>
-        <item name="android:navigationBarColor">@color/colorRootDark</item>
+        <item name="android:statusBarColor">@color/colorLineDark</item>
+        <item name="android:navigationBarColor">@color/colorLineDark</item>
 
         <item name="android:popupMenuStyle">@style/PopupThemeLight</item>
     </style>
@@ -111,6 +111,8 @@
         <item name="android:navigationBarColor">?attr/colorPrimaryDark</item>
 
         <item name="android:popupMenuStyle">@style/PopupThemeDark</item>
+        <!--actionOverflowMenuStyle controls the state of the overflow popup window-->
+        <item name="actionOverflowMenuStyle">@style/DarkOverflowMenu</item>
     </style>
 
     <style name="AppThemeDark.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
@@ -125,6 +127,7 @@
         <!-- android:textColorPrimary is the  color of the title text
              in the Toolbar, in the Theme.AppCompat theme:  -->
         <item name="android:textColorPrimary">?attr/titleColor</item>
+        <item name="android:textColor">@color/colorTextContentDark</item>
 
         <!-- android:textColorPrimaryInverse is the  color of the title
              text in the Toolbar, in the Theme.AppCompat.Light theme:  -->
