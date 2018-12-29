@@ -91,17 +91,17 @@
 
         <item name="android:windowBackground">@color/colorPrimaryDarker</item>
         <item name="android:popupMenuStyle">@style/PopupThemeDark</item>
-
         <!--actionOverflowMenuStyle controls the state of the overflow popup window-->
-        <item name="actionOverflowMenuStyle">@style/DarkOverflowMenu</item>
+        <!--<item name="actionOverflowMenuStyle">@style/DarkOverflowMenu</item>-->
     </style>
 
     <!-- AMOLED Dark Application Theme -->
     <style name="AppThemeBlack" parent="Theme.AppCompat.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimaryDarker</item>
+        <item name="colorPrimary">@color/colorPrimaryBlack</item>
         <item name="colorPrimaryDark">@color/colorPrimaryBlack</item>
         <item name="colorAccent">@color/colorAccentDark</item>
+
         <item name="cardColor">@color/colorPrimaryBlack</item>
         <item name="drawerColor">@color/colorLight</item>
 
@@ -132,7 +132,9 @@
     </style>
 
     <style name="DarkOverflowMenu" parent="Widget.AppCompat.Light.PopupMenu.Overflow">
-        <item name="android:popupBackground">@color/colorGrey</item>
+        <!--<item name="android:windowDisablePreview">true</item>-->
+        <!--<item name="overlapAnchor">false</item>-->
+        <item name="android:popupBackground">@color/colorBlack</item>
     </style>
 
     <style name="AppThemeDark.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
@@ -197,7 +199,7 @@
         <!-- This would set the toolbar's background color,
               but setting this also changes the popup menu's background,
               even if we define popupTheme for our <Toolbar> -->
-        <!--<item name="android:background"></item>-->
+        <!--<item name="android:background">@color/colorPrimaryAMODark</item>-->
 
         <item name="android:colorBackground">@color/colorPrimaryBlack</item>
     </style>
